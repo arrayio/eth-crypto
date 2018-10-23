@@ -1,4 +1,4 @@
-#Ethereum crypto
+Ethereum crypto
 
 
 The repository contains methods necessary for validating Ethereum signatures in blockchain Array-IO.
