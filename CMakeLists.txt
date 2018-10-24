@@ -1,16 +1,4 @@
-project(ethash)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
-set(ETHHASH_LIBS ethash)
-
-if (WIN32 AND WANT_CRYPTOPP)
-    add_subdirectory(ethash/cryptopp)
-endif()
-
 add_subdirectory(ethash/src/libethash)
-
-add_subdirectory(ethash/src/benchmark EXCLUDE_FROM_ALL)
-
 
 file(GLOB ETHER_HEADERS "include/eth-crypto/core/*.h" "include/eth-crypto/crypto/*.h")
 file(GLOB ETHER_SOURCES "src/core/*.cpp" "src/crypto/*.cpp")
