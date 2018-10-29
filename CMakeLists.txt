@@ -15,12 +15,16 @@ find_package(OpenSSL REQUIRED)
 
 add_library( eth-crypto ${ETHER_SOURCES} ${ETHER_HEADERS} )
 
-target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} dl ethash )
+if (MSVC)
+    target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} ethash )
+else()
+    target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} dl ethash )
+endif()
 
 target_include_directories( eth-crypto
-        PUBLIC "${Boost_INCLUDE_DIR}"
-        PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
-        PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
-        PUBLIC "${OPENSSL_INCLUDE_DIR}"
-        PRIVATE "ethash/src/libethash"
+    PUBLIC "${Boost_INCLUDE_DIR}"
+    PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
+    PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
+    PUBLIC "${OPENSSL_INCLUDE_DIR}"
+    PRIVATE "ethash/src/libethash"
 )
