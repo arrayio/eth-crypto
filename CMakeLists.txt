@@ -25,5 +25,6 @@ target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PT
 target_include_directories( eth-crypto
         PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
         PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
+        PUBLIC "${OPENSSL_INCLUDE_DIR}"
         PUBLIC "ethash/src/libethash"
 )
