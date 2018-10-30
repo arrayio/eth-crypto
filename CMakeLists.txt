@@ -5,16 +5,19 @@ file(GLOB ETHER_SOURCES "src/core/*.cpp" "src/crypto/*.cpp")
 
 FIND_PACKAGE(Boost 1.65 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
-include_directories(${Boost_INCLUDE_DIR}
-        "ethash/src/libethash"
-        "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
-        )
 
 IF(NOT "$ENV{OPENSSL_ROOT_DIR}" STREQUAL "")
     set(OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
     set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
     message(STATUS "Setting up OpenSSL root and include vars to ${OPENSSL_ROOT_DIR}, ${OPENSSL_INCLUDE_DIR}")
 ENDIF()
+
+include_directories(${Boost_INCLUDE_DIR}
+        "ethash/src/libethash"
+        "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
+        ${OPENSSL_INCLUDE_DIR}
+        )
+
 
 find_package(OpenSSL REQUIRED)
 
@@ -26,4 +29,5 @@ target_include_directories( eth-crypto
         PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
         PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
         PUBLIC "ethash/src/libethash"
+        PUBLIC "${OPENSSL_INCLUDE_DIR}"
 )
