@@ -14,8 +14,9 @@
 
 #include <openssl/evp.h>
 
-#include <sha3.h>
-#include <ethash.h>
+
+#include <../../eth-crypto/ethash/src/libethash/sha3.h>
+#include <../../eth-crypto/ethash/src/libethash/ethash.h>
 
 namespace dev
 {
