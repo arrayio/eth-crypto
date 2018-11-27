@@ -20,6 +20,7 @@
 #include <eth-crypto/core/Common.h>
 #include <eth-crypto/crypto/Common.h>
 #include <eth-crypto/core//RLP.h>
+#include <eth-crypto/core/CommonIO.h>
 //#include <eth-crypto/core/SHA3.h>
 
 #include <boost/optional.hpp>

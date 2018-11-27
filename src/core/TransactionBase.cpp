@@ -20,84 +20,14 @@
  */
 
 #include <eth-crypto/core/vector_ref.h>
-//#include <libdevcore/Log.h>
 #include <eth-crypto/core/Common.h>
 #include <eth-crypto/core/Exceptions.h>
 #include <eth-crypto/core/TransactionBase.h>
-//#include "EVMSchedule.h"
+#include <eth-crypto/core/sha3_wrap.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
-
-void TransactionBase::sign(Secret const& _priv)
-{
-	auto sig = dev::sign(_priv, sha3(WithoutSignature));
-	SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
-	if (sigStruct.isValid())
-		m_vrs = sigStruct;
-}
-
-void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forEip155hash) const
-{
-	if (m_type == NullTransaction)
-		return;
-
-	_s.appendList((_sig || _forEip155hash ? 3 : 0) + 6);
-	_s << m_nonce;
-	_s << m_gasPrice;
-	_s << m_gas;
-	if (m_type == MessageCall)
-		_s << m_receiveAddress;
-	else
-		_s << "";
-	_s << m_value ;
-	_s << m_data;
-
-	if (_sig)
-	{
-//		if (!m_vrs)
-//			BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
-
-		if (hasZeroSignature())
-			_s << m_chainId;
-		else
-		{
-			int const vOffset = m_chainId * 2 + 35;
-			_s << (m_vrs->v + vOffset);
-		}
-		_s << (u256)m_vrs->r << (u256)m_vrs->s;
-	}
-	else if (_forEip155hash)
-	{
-		_s << m_chainId;
-		_s << 0;
-		_s << 0;
-	}
-		//_s << m_chainId << 0 << 0;
-
-}
-
-static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
-
-
-
-h256 TransactionBase::sha3(IncludeSignature _sig) const
-{
-	if (_sig == WithSignature && m_hashWith)
-		return m_hashWith;
-
-	RLPStream s;
-	streamRLP(s, _sig, m_chainId > 0 && _sig == WithoutSignature);
-	h256 ret;
-	/*auto ret = dev::sha3(s.out());
-	if (_sig == WithSignature)
-		m_hashWith = ret;
-	 */
-	return ret;
-}
-
 
 
 //TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _checkSig)
@@ -137,13 +67,13 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, int _checkSig)
             else if (v == 27 || v == 28)
                 m_chainId = -4;
             else
-                throw std::runtime_error("error");
+                throw std::runtime_error("Invalid signature");
 
             m_vrs = SignatureStruct{r, s, static_cast<byte>(v - (m_chainId * 2 + 35))};
 
 //            if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
             if (_checkSig >= 1 && !m_vrs->isValid())
-                throw std::runtime_error("error");
+                throw std::runtime_error("Invalid signature");
         }
 
 //        if (_checkSig == CheckTransaction::Everything)
@@ -151,15 +81,13 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, int _checkSig)
             m_sender = sender();
 
         if (rlp.itemCount() > 9)
-            throw std::runtime_error("error");
+            throw std::runtime_error("too many fields in the transaction RLP");
     }
     catch (Exception& _e)
     {
-        throw std::runtime_error("error");
+        throw std::runtime_error("invalid transaction format: " + toString(rlp) + " RLP: " + toHex(rlp.data()));
     }
 }
-
-#include <eth-crypto/core/sha3_wrap.h>
 
 Address const& TransactionBase::sender() const
 {
@@ -170,11 +98,11 @@ Address const& TransactionBase::sender() const
         else
         {
             if (!m_vrs)
-                throw std::runtime_error("error");
+                throw std::runtime_error("Transaction is unsigned");
 
             auto p = recover(*m_vrs, sha3(WithoutSignature));
             if (!p)
-                throw std::runtime_error("error");
+                throw std::runtime_error("Invalid signature");
 
             std::vector<unsigned char> buf(p.data(), p.data()+ p.size);
             m_sender = right160(dev::ethash::sha3_ethash(buf));
@@ -182,3 +110,63 @@ Address const& TransactionBase::sender() const
     }
     return m_sender;
 }
+
+void TransactionBase::sign(Secret const& _priv)
+{
+    auto sig = dev::sign(_priv, sha3(WithoutSignature));
+    SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
+    if (sigStruct.isValid())
+        m_vrs = sigStruct;
+}
+
+void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forEip155hash) const
+{
+    if (m_type == NullTransaction)
+        return;
+
+	_s.appendList((_sig || _forEip155hash ? 3 : 0) + 6);
+	_s << m_nonce << m_gasPrice << m_gas;
+	if (m_type == MessageCall)
+		_s << m_receiveAddress;
+	else
+		_s << "";
+	_s << m_value << m_data;
+
+	if (_sig)
+	{
+		if (!m_vrs)
+			throw std::runtime_error("Transaction is unsigned");
+
+		if (hasZeroSignature())
+			_s << m_chainId;
+		else
+		{
+			int const vOffset = m_chainId * 2 + 35;
+			_s << (m_vrs->v + vOffset);
+		}
+		_s << (u256)m_vrs->r << (u256)m_vrs->s;
+	}
+	else if (_forEip155hash)
+		_s << m_chainId << 0 << 0;
+}
+
+
+
+
+h256 TransactionBase::sha3(IncludeSignature _sig) const
+{
+    if (_sig == WithSignature && m_hashWith)
+        return m_hashWith;
+
+	RLPStream s;
+	streamRLP(s, _sig, m_chainId > 0 && _sig == WithoutSignature);
+
+    std::vector<unsigned char> buf(s.out().data(), s.out().data()+ s.out().size());
+    auto ret = dev::ethash::sha3_ethash(buf);
+
+	if (_sig == WithSignature)
+		m_hashWith = ret;
+	return ret;
+}
+
+
