@@ -5,6 +5,10 @@ file(GLOB ETHER_SOURCES "src/core/*.cpp" "src/crypto/*.cpp")
 
 FIND_PACKAGE(Boost 1.65 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
+include_directories(${Boost_INCLUDE_DIR}
+        "ethash/src/libethash"
+        "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
+        )
 
 IF(NOT "$ENV{OPENSSL_ROOT_DIR}" STREQUAL "")
     set(OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
@@ -23,11 +27,16 @@ find_package(OpenSSL REQUIRED)
 
 add_library( eth-crypto ${ETHER_SOURCES} ${ETHER_HEADERS} )
 
-target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} dl ethash )
+if (MSVC)
+    target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} ethash )
+else()
+    target_link_libraries( eth-crypto secp256k1 ${OPENSSL_LIBRARIES}  ${CMAKE_USE_PTHREADS_INIT} dl ethash )
+endif()
 
 target_include_directories( eth-crypto
-        PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
-        PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
-        PUBLIC "ethash/src/libethash"
-        PUBLIC "${OPENSSL_INCLUDE_DIR}"
+    PUBLIC "${Boost_INCLUDE_DIR}"
+    PUBLIC "${CMAKE_SOURCE_DIR}/libraries/eth-crypto/include"
+    PUBLIC "${CMAKE_SOURCE_DIR}/libraries/secp256k1/include"
+    PUBLIC "${OPENSSL_INCLUDE_DIR}"
+    PRIVATE "ethash/src/libethash"
 )
