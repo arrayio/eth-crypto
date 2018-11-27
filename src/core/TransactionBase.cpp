@@ -20,9 +20,11 @@
  */
 
 #include <eth-crypto/core/vector_ref.h>
+//#include <libdevcore/Log.h>
 #include <eth-crypto/core/Common.h>
 #include <eth-crypto/core/Exceptions.h>
 #include <eth-crypto/core/TransactionBase.h>
+//#include "EVMSchedule.h"
 #include <eth-crypto/core/sha3_wrap.h>
 
 using namespace std;
@@ -30,8 +32,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-//TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _checkSig)
-TransactionBase::TransactionBase(bytesConstRef _rlpData, int _checkSig)
+TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _checkSig)
 {
     RLP const rlp(_rlpData);
     try
@@ -71,13 +72,11 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, int _checkSig)
 
             m_vrs = SignatureStruct{r, s, static_cast<byte>(v - (m_chainId * 2 + 35))};
 
-//            if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
-            if (_checkSig >= 1 && !m_vrs->isValid())
+            if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
                 throw std::runtime_error("Invalid signature");
         }
 
-//        if (_checkSig == CheckTransaction::Everything)
-        if (_checkSig == 2)
+        if (_checkSig == CheckTransaction::Everything)
             m_sender = sender();
 
         if (rlp.itemCount() > 9)
