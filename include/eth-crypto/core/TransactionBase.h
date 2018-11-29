@@ -96,6 +96,8 @@ public:
 	/// @returns the transaction-count of the sender.
 	u256 nonce() const { return m_nonce; }
 
+	int ChainId() const { return m_chainId; }
+
 	/// Sets the nonce to the given value. Clears any signature.
 	void setNonce(u256 const& _n) { clearSignature(); m_nonce = _n; }
 
