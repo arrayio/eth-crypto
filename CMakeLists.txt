@@ -1,3 +1,4 @@
+set(CMAKE_CXX_FLAGS "-std=c++14")
 add_subdirectory(ethash/src/libethash)
 
 file(GLOB ETHER_HEADERS "include/eth-crypto/core/*.h" "include/eth-crypto/crypto/*.h")
