@@ -2,6 +2,11 @@ set(CMAKE_CXX_FLAGS "-std=c++14")
 
 add_subdirectory(ethash/src/libethash)
 
+if(MSVC)
+	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  /EHsc" )
+	set( CMAKE_VS_PLATFORM_TOOLSET "LLVM-vs2017")
+endif()
+
 file(GLOB ETHER_HEADERS "include/eth-crypto/core/*.h" "include/eth-crypto/crypto/*.h")
 file(GLOB ETHER_SOURCES "src/core/*.cpp" "src/crypto/*.cpp")
 
