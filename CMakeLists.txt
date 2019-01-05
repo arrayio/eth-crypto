@@ -7,6 +7,13 @@ if(MSVC)
 #	set( CMAKE_VS_PLATFORM_TOOLSET "LLVM-vs2017")
 endif()
 
+if (NOT MSVC)
+    if ( LIBCXX_BUILD )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -stdlib=libc++" )
+    endif()
+endif()
+
+
 file(GLOB ETHER_HEADERS "include/eth-crypto/core/*.h" "include/eth-crypto/crypto/*.h")
 file(GLOB ETHER_SOURCES "src/core/*.cpp" "src/crypto/*.cpp")
 
